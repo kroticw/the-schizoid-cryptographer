@@ -4,23 +4,8 @@
 
 #ifndef ENCRYPTER_H
 #define ENCRYPTER_H
+#include <vector>
+
+int modifyFile(const std::string& inputFilename, const std::string& outputFilename, const std::vector<uint8_t>& key);
 
 #endif //ENCRYPTER_H
-
-void hello();
-
-void encrypt();
-
-void decrypt();
-
-void encrypt_key();
-
-void decrypt_key();
-
-void encrypt_string();
-
-void decrypt_string();
-
-void encrypt_array();
-
-void decrypt_array();

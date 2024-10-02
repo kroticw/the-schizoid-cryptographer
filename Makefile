@@ -1,6 +1,8 @@
 .PHONY: build
 build:
-	@clang++ . -o program
+	@rm -r build || :
+	 mkdir build && cd build
+	@cmake .. && cmake --build .
 
 .PHONY: run
 run:
