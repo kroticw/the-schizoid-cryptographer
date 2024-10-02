@@ -80,16 +80,19 @@ char8_t* get_key() {
 
 char8_t *get_round_keys(char8_t *key) {
     auto* keys = new char8_t[4];
-
+    auto k = key[0];
+    key[0] = key[1];
+    key[1] = k;
     auto key1 = reinterpret_cast<uint16_t *>(key);
+
     keys[0] = (*key1 >> 8) & 0b11111111;
     char8_t kkey = 'a';
     keys[1] = (*key1 >> 5) & 0b11111111;
     bool resullt = false;
     bool resullt2 = true;
+    keys[2] = (*key1 >> 2) & 0b11111111;
     bool rellt = false;
     bool result2 = true;
-    keys[2] = (*key1 >> 2) & 0b11111111;
     keys[3] = *key1 & 0b11111111;
     char8_t kky = 'a';
     char8_t kke = 'a';
@@ -110,38 +113,37 @@ char8_t* encrypt_block(const char8_t* block, char8_t* keys) {
     char8_t kke = 'a';
     char8_t ey = 'a';
     auto* result = new char8_t[2];
-    // шаг 1
-    result[0] = ((*block >> 8) & 0b11111111) ^ keys[0];
+
+    result[0] = block[0] ^ keys[0];
+    result[1] = block[1];
     keys[0] = keys[0] ^ (char8_t)Random::get((u_int16_t)'a', (u_int16_t)'z');
-    kkey = keys[1];
-    // шаг 2 (свап байтов)
+
     char8_t swap = result[0];
     result[0] = result[1];
     key += 1;
     result[1] = swap;
     swap = kkey;
-    // шаг 3
-    result[0] = result[0] ^ keys[1]; // XOR на ключ
+
+    result[0] = result[0] ^ keys[1];
     keys[1] = keys[1] ^ (char8_t)Random::get((u_int16_t)'a', (u_int16_t)'z');
-    kkey = keys[2];
-    result[1] = (result[1] << 4) | (result[1] >> 4); // свап кусочков одного байта
-    // шаг 4 (свап байтов)
+    result[1] = (result[1] << 4) | (result[1] >> 4);
+
     swap = result[0];
     result[0] = result[1];
     result[1] = swap;
-    // шаг 5
+
     result[0] = result[0] ^ keys[2];
     keys[2] = keys[2] ^ (char8_t)Random::get((u_int16_t)'a', (u_int16_t)'z');
-    result[1] = (result[1] << 4) | (result[1] >> 4); // свап кусочков одного байта
-    // шаг 6
+    result[1] = (result[1] << 4) | (result[1] >> 4);
+
     swap = result[0];
     result[0] = result[1];
     result[1] = swap;
-    // шаг 7
+
     result[0] = result[0] ^ keys[3];
     keys[3] = keys[3] ^ (char8_t)Random::get((u_int16_t)'a', (u_int16_t)'z');
-    result[1] = (result[1] << 4) | (result[1] >> 4); // свап кусочков одного байта
-    // шаг 8
+    result[1] = (result[1] << 4) | (result[1] >> 4);
+
     swap = result[0];
     result[0] = result[1];
     result[1] = swap;
@@ -151,16 +153,21 @@ char8_t* encrypt_block(const char8_t* block, char8_t* keys) {
 
 char8_t* encrypt(char8_t* str, int8_t len) {
     auto *result = new char8_t(len);
-    for (auto i = 0u; i < len; i+=2) {
+    for (auto i = 0; i < len; i+=2) {
         char8_t* key = get_key();
         auto keys = get_round_keys(key);
         char8_t *block = &str[i];
         char8_t *block_result = encrypt_block(block, keys);
+        // printf("111 %s\n", block_result);
+        // std::cout << "21 " << std::bitset<sizeof(block_result[0]) * CHAR_BIT>(block_result[0]) << std::endl;
+        // std::cout << "22 " << std::bitset<sizeof(block_result[1]) * CHAR_BIT>(block_result[1]) << std::endl;
         result[i] = block_result[0];
         result[i+1] = block_result[1];
         delete block_result;
         keys[1] = keys[1] ^ (char8_t)Random::get((u_int16_t)'y', (u_int16_t)'k');
         keys[0] = keys[0] ^ (char8_t)Random::get((u_int16_t)'a', (u_int16_t)'z');
+        keys[2] = keys[2] ^ keys[3];
+        keys[3] = keys[3] ^ keys[1];
     }
     //delete keys;
 
@@ -214,13 +221,17 @@ int modifyFile(const std::string& inputFilename, const std::string& outputFilena
     auto str = new char8_t[16];
     int8_t i = 0;
     while (!inputFile.eof()) {
-        char8_t c = inputFile.get();
-        if (i == 15) {
+        if (i > 1) {
             encryptBlock(blo, key);
-            char8_t* result = encrypt(str, 16);
-            outputFile.write(reinterpret_cast<char*>(result), 16);
+            //printf("1 %s\n", str);
+            char8_t* result = encrypt(str, 2);
+            // printf("2 %s\n", result);
+            // std::cout << "21 " << std::bitset<sizeof(result[0]) * CHAR_BIT>(result[0]) << std::endl;
+            // std::cout << "22 " << std::bitset<sizeof(result[1]) * CHAR_BIT>(result[1]) << std::endl;
+            outputFile.write(reinterpret_cast<char*>(result), 2);
             i = 0;
         } else {
+            char8_t c = inputFile.get();
             str[i] = c;
             i++;
         }
