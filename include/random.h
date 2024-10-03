@@ -5,6 +5,7 @@
 #ifndef RANDOM_H
 #define RANDOM_H
 #include <random>
+#include <chrono>
 
 namespace Random
 {
